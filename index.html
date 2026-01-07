@@ -487,7 +487,11 @@ q0  _/_,S  ha`;
             return (
                 <div className="flex-1 flex flex-col bg-slate-50/50 relative overflow-hidden">
                     <div 
-                        className="flex-1 overflow-hidden relative cursor-grab active:cursor-grabbing bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-fixed touch-none select-none [&_*]:cursor-inherit"
+                        className="flex-1 overflow-hidden relative cursor-grab active:cursor-grabbing bg-fixed touch-none select-none [&_*]:cursor-inherit"
+                        style={{
+                            backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)',
+                            backgroundSize: '24px 24px' // Ajustado para um grid mais agradável
+                        }}
                         onWheel={handleWheel} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}
                         onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}
                         ref={containerRef}
