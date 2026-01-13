@@ -35,6 +35,9 @@ export const applySvgPostProcessing = (container, activeColor, activeEdgeIndex, 
     // Fix zoom bug em SVG
     svgElem.style.maxWidth = 'none';
     svgElem.style.height = '100%';
+    svgElem.style.width = '100%';
+    svgElem.removeAttribute('height'); // Remove height attribute set by mermaid
+    // Keep width 100% or remove it too if needed, but 100% is usually safer for containers
 
     // 1. Colorir Arrowheads (Marcadores)
     const links = svgElem.querySelectorAll('path');
