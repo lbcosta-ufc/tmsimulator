@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+      --tape-size: 56px;
+  }
+  body { 
+      font-family: 'Inter', sans-serif; 
+      touch-action: none; 
+      overscroll-behavior: none; 
+  }
+  .font-mono { 
+      font-family: 'JetBrains Mono', monospace; 
+  }
+}
+
+@layer utilities {
+  .tape-container { will-change: transform; }
+  .tape-cell { 
+      width: var(--tape-size); 
+      height: var(--tape-size); 
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+  }
+  
+  .needs-compile { animation: pulse-border 2s infinite; }
+  
+  /* Mermaid Fixes */
+  .edgeLabel { background-color: white; opacity: 0.95; padding: 2px; }
+  g.edgeLabel > g > foreignObject > div { background-color: white; }
+  
+  /* Custom Scrollbar */
+  .custom-scroll::-webkit-scrollbar { width: 6px; }
+  .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
+  .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+  .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+}
+
+@keyframes pulse-border {
+  0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(99, 102, 241, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+}
