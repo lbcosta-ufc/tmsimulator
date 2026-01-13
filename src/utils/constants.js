@@ -14,6 +14,20 @@ export const THEME = {
     text: '#312e81'  // Indigo
 };
 
+export const MACHINE_STATES = {
+    ACCEPTED: 'ha',
+    REJECTED: 'hr', // Not strictly a state in some definitions, but used here
+    START: 'q0'
+};
+
+export const SIMULATION_STATUS = {
+    IDLE: 'IDLE',
+    RUNNING: 'RUNNING',
+    PAUSED: 'PAUSED',
+    ACCEPTED: 'ACCEPTED',
+    REJECTED: 'REJECTED'
+};
+
 export const DEFAULT_CODE = `// Verificador de Palíndromos (Alfabeto {a, b})
 // Aceita strings como abba, bab, aa, etc.
 // Sintaxe: EstadoAtual  Lido/Escrito,Dir  ProxEstado

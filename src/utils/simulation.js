@@ -1,7 +1,7 @@
-import { CONFIG, SUBSCRIPT_MAP } from './constants';
+import { CONFIG, SUBSCRIPT_MAP, MACHINE_STATES, SIMULATION_STATUS } from './constants';
 
 export const formatStateLabel = (name) => {
-    if (name === 'ha') return 'hₐ';
+    if (name === MACHINE_STATES.ACCEPTED) return 'hₐ';
     const match = name.match(/^([a-zA-Z])(\w+)$/);
     if (match) {
         const base = match[1];
@@ -72,22 +72,68 @@ export const parseMachineCode = (sourceCode) => {
     return { newTransitions, nodes: Array.from(nodes), edges };
 };
 
+/**
+ * Executes a single step of the Turing Machine.
+ * Returns a new state object (immutable).
+ */
+export const performStep = (transitions, tape, head, currentState) => {
+    const currentSymbol = tape[head] || '_';
+    const key = `${currentState}:${currentSymbol}`;
+    const rule = transitions[key];
+
+    if (!rule) {
+        if (currentState === MACHINE_STATES.ACCEPTED) {
+            return { status: SIMULATION_STATUS.ACCEPTED };
+        } else {
+            return {
+                status: SIMULATION_STATUS.REJECTED,
+                error: `Sem transição para (${currentState}, ${currentSymbol})`
+            };
+        }
+    }
+
+    const newTape = { ...tape };
+    if (rule.write === '_') delete newTape[head];
+    else newTape[head] = rule.write;
+
+    let newHead = head;
+    if (rule.move === 'R') newHead++;
+    else if (rule.move === 'L') newHead--;
+
+    if (newHead < 0) {
+        return {
+            status: SIMULATION_STATUS.REJECTED,
+            error: "Crash: Limite esquerdo da fita."
+        };
+    }
+
+    let completionStatus = SIMULATION_STATUS.RUNNING;
+    if (rule.to === MACHINE_STATES.ACCEPTED) completionStatus = SIMULATION_STATUS.ACCEPTED;
+
+    return {
+        tape: newTape,
+        head: newHead,
+        currentState: rule.to,
+        status: completionStatus
+    };
+};
+
 export const runFastSimulation = (transitions, inputString) => {
     const tape = {};
     for (let i = 0; i < inputString.length; i++) tape[i] = inputString[i];
 
     let head = 0;
-    let currentState = 'q0';
+    let currentState = MACHINE_STATES.START;
     let steps = 0;
 
     while (steps < CONFIG.MAX_BATCH_STEPS) {
-        if (currentState === 'ha') return 'ACCEPTED';
+        if (currentState === MACHINE_STATES.ACCEPTED) return SIMULATION_STATUS.ACCEPTED;
 
         const currentSymbol = tape[head] || '_';
         const key = `${currentState}:${currentSymbol}`;
         const rule = transitions[key];
 
-        if (!rule) return 'REJECTED';
+        if (!rule) return SIMULATION_STATUS.REJECTED;
 
         if (rule.write === '_') delete tape[head];
         else tape[head] = rule.write;
@@ -95,7 +141,7 @@ export const runFastSimulation = (transitions, inputString) => {
         if (rule.move === 'R') head++;
         else if (rule.move === 'L') head--;
 
-        if (head < 0) return 'REJECTED'; // Crash (Limite esquerdo)
+        if (head < 0) return SIMULATION_STATUS.REJECTED;
 
         currentState = rule.to;
         steps++;
