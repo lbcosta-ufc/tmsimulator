@@ -6,18 +6,66 @@ const TapeVisualizer = memo(({ tape, head, status, onCellClick }) => {
     const TOTAL_CELL_WIDTH = CONFIG.TAPE_CELL_WIDTH + CONFIG.TAPE_CELL_MARGIN;
     const CENTER_OFFSET = TOTAL_CELL_WIDTH / 2;
 
+    const [dragOffset, setDragOffset] = React.useState(0);
+    const [isDragging, setIsDragging] = React.useState(false); // State for transition toggle
+    const dragRef = React.useRef({ isDown: false, startX: 0, startOffset: 0, hasMoved: false });
+
+    React.useEffect(() => {
+        setDragOffset(0);
+    }, [head]);
+
+    const handleStart = (clientX) => {
+        dragRef.current = {
+            isDown: true,
+            startX: clientX,
+            startOffset: dragOffset,
+            hasMoved: false
+        };
+        setIsDragging(true);
+    };
+
+    const handleMove = (clientX) => {
+        if (!dragRef.current.isDown) return;
+        const delta = clientX - dragRef.current.startX;
+        if (Math.abs(delta) > 5) dragRef.current.hasMoved = true;
+        setDragOffset(dragRef.current.startOffset + delta);
+    };
+
+    const handleEnd = () => {
+        dragRef.current.isDown = false;
+        setIsDragging(false);
+    };
+
+    const handleCellClickInternal = (idx) => {
+        if (!dragRef.current.hasMoved) {
+            onCellClick(idx);
+        }
+    };
+
     return (
-        <div className="relative w-full bg-slate-100/50 h-28 border-b border-slate-200 shadow-inner overflow-hidden">
+        <div
+            className="relative w-full bg-slate-100/50 h-28 border-b border-slate-200 shadow-inner overflow-hidden cursor-grab active:cursor-grabbing"
+            onMouseDown={e => handleStart(e.clientX)}
+            onMouseMove={e => handleMove(e.clientX)}
+            onMouseUp={handleEnd}
+            onMouseLeave={handleEnd}
+            onTouchStart={e => handleStart(e.touches[0].clientX)}
+            onTouchMove={e => handleMove(e.touches[0].clientX)}
+            onTouchEnd={handleEnd}
+        >
             <div className="absolute left-0 top-0 bottom-0 w-24 z-20 bg-gradient-to-r from-slate-100 to-transparent pointer-events-none" />
             <div className="absolute right-0 top-0 bottom-0 w-24 z-20 bg-gradient-to-l from-slate-100 to-transparent pointer-events-none" />
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 z-30 text-indigo-500 drop-shadow-md mt-1">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 z-30 text-indigo-500 drop-shadow-md mt-1 pointer-events-none">
                 <Icons.TriangleDown width="24" height="12" />
             </div>
             <div
-                className="flex items-center h-full absolute top-0 left-1/2 transition-transform duration-300 ease-in-out tape-container"
-                style={{ transform: `translateX(calc(-${head * TOTAL_CELL_WIDTH}px - ${CENTER_OFFSET}px))` }}
+                className="flex items-center h-full absolute top-0 left-1/2 tape-container"
+                style={{
+                    transform: `translateX(calc(-${head * TOTAL_CELL_WIDTH}px - ${CENTER_OFFSET}px + ${dragOffset}px))`,
+                    transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                }}
             >
-                {Array.from({ length: Math.max(head + 15, 30) }).map((_, idx) => {
+                {Array.from({ length: Math.max(head + 20, 40) }).map((_, idx) => {
                     const char = tape[idx] || '_';
                     const isHead = idx === head;
                     let stateStyle = "border-slate-300 bg-white text-slate-400";
@@ -29,7 +77,12 @@ const TapeVisualizer = memo(({ tape, head, status, onCellClick }) => {
                     return (
                         <div
                             key={idx}
-                            onClick={() => onCellClick(idx)}
+                            onMouseUp={(e) => {
+                                // Only fire click if we didn't drag.
+                                // The capture is handled by the parent's MouseUp logic tracking movement.
+                                // We call internal handler here.
+                                handleCellClickInternal(idx);
+                            }}
                             className="flex flex-col items-center justify-center shrink-0 mr-2 cursor-pointer hover:scale-105 transition-transform"
                             style={{ width: `${CONFIG.TAPE_CELL_WIDTH}px` }}
                         >
